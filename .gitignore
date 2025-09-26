@@ -1,0 +1,15 @@
+# Build results
+bin/
+obj/
+
+# User-specific
+*.user
+*.suo
+*.userosscache
+*.sln.docstates
+
+# VS Code
+.vscode/
+
+# Others
+.DS_Store
