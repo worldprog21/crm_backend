@@ -2,6 +2,7 @@ using AutoMapper;
 using backend.Data;
 using backend.DTOs;
 using backend.Entities;
+using backend.RequestHelpers;
 using Microsoft.AspNetCore.Mvc;
 using Microsoft.EntityFrameworkCore;
 
@@ -21,14 +22,30 @@ namespace backend.Controllers
         }
 
         [HttpGet]
-        public async Task<ActionResult<List<CustomerDto>>> GetAllCustomers()
+        public async Task<ActionResult<List<CustomerDto>>> GetAllCustomers([FromQuery] PaginationParams paginationParams)
         {
-            var customers = await _context.Customers
+            var query = _context.Customers
             .Include(c => c.Contacts) // load contact
             .Include(c => c.Opportunities) // load Opportunities
-            .ToListAsync();
+            .AsQueryable();
 
-            return _mapper.Map<List<CustomerDto>>(customers);
+            var totalCount = await query.CountAsync();
+
+            var customers = await query
+                .Skip((paginationParams.PageNumber - 1) * paginationParams.PageSize)
+                .Take(paginationParams.PageSize)
+                .ToListAsync();
+
+            var customerDtos = _mapper.Map<List<CustomerDto>>(customers);
+
+            return Ok(new
+            {
+                TotalCount = totalCount,
+                PageNumber = paginationParams.PageNumber,
+                PageSize = paginationParams.PageSize,
+                TotalPages = (int)Math.Ceiling(totalCount / (double)paginationParams.PageSize),
+                Data = customerDtos
+            });
         }
 
         [HttpGet("{id}")]
