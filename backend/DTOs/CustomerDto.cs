@@ -9,6 +9,7 @@ public class CustomerDto
     public string Industry { get; set; }
     public string Address { get; set; }
     public string Type { get; set; }
+    public List<ContactDto> Contacts { get; set; } = new List<ContactDto>();
     public DateTime CreatedAt { get; set; }
     public DateTime UpdatedAt { get; set; }
 }

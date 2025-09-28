@@ -23,7 +23,9 @@ namespace backend.Controllers
         [HttpGet]
         public async Task<ActionResult<List<CustomerDto>>> GetAllCustomers()
         {
-            var customers = await _context.Customers.ToListAsync();
+            var customers = await _context.Customers
+            .Include(c => c.Contacts) // load contact
+            .ToListAsync();
 
             return _mapper.Map<List<CustomerDto>>(customers);
         }
@@ -31,7 +33,9 @@ namespace backend.Controllers
         [HttpGet("{id}")]
         public async Task<ActionResult<CustomerDto>> GetCustomerById(Guid id)
         {
-            var customer = await _context.Customers.FirstOrDefaultAsync(x => x.Id == id);
+            var customer = await _context.Customers
+            .Include(c => c.Contacts) // load contact
+            .FirstOrDefaultAsync(x => x.Id == id);
 
             if (customer == null)
                 return NotFound(new { Message = "Customer not found" });
