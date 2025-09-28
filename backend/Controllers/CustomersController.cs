@@ -22,18 +22,35 @@ namespace backend.Controllers
         }
 
         [HttpGet]
-        public async Task<ActionResult<List<CustomerDto>>> GetAllCustomers([FromQuery] PaginationParams paginationParams)
+        public async Task<ActionResult<object>> GetAllCustomers([FromQuery] CustomerFilterParams filterParams)
         {
             var query = _context.Customers
             .Include(c => c.Contacts) // load contact
             .Include(c => c.Opportunities) // load Opportunities
             .AsQueryable();
 
+            // filtering
+            if (!string.IsNullOrWhiteSpace(filterParams.Name))
+            {
+                query = query.Where(c => c.Name.ToLower().Contains(filterParams.Name.ToLower()));
+            }
+
+             if (!string.IsNullOrWhiteSpace(filterParams.Industry))
+            {
+                query = query.Where(c => c.Industry.ToLower().Contains(filterParams.Industry.ToLower()));
+            }
+
+            if (!string.IsNullOrWhiteSpace(filterParams.Type))
+            {
+                query = query.Where(c => c.Type.ToLower().Contains(filterParams.Type.ToLower()));
+            }
+
+            // pagination
             var totalCount = await query.CountAsync();
 
             var customers = await query
-                .Skip((paginationParams.PageNumber - 1) * paginationParams.PageSize)
-                .Take(paginationParams.PageSize)
+                .Skip((filterParams.PageNumber - 1) * filterParams.PageSize)
+                .Take(filterParams.PageSize)
                 .ToListAsync();
 
             var customerDtos = _mapper.Map<List<CustomerDto>>(customers);
@@ -41,9 +58,9 @@ namespace backend.Controllers
             return Ok(new
             {
                 TotalCount = totalCount,
-                PageNumber = paginationParams.PageNumber,
-                PageSize = paginationParams.PageSize,
-                TotalPages = (int)Math.Ceiling(totalCount / (double)paginationParams.PageSize),
+                PageNumber = filterParams.PageNumber,
+                PageSize = filterParams.PageSize,
+                TotalPages = (int)Math.Ceiling(totalCount / (double)filterParams.PageSize),
                 Data = customerDtos
             });
         }
