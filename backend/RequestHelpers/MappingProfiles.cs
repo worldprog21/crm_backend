@@ -25,5 +25,18 @@ public class MappingProfiles : Profile
         CreateMap<CreateContactDto, Contact>();
         CreateMap<UpdateContactDto, Contact>()
             .ForAllMembers(opts => opts.Condition((src, dest, srcMember) => srcMember != null));
+
+        // Activities
+        CreateMap<Activity, ActivityDto>().ReverseMap();
+        CreateMap<CreateActivityDto, Activity>();
+        CreateMap<UpdateActivityDto, Activity>()
+            .ForAllMembers(opts => opts.Condition((src, dest, srcMember) => srcMember != null));
+
+        // Opportunities
+        CreateMap<Opportunity, OpportunityDto>().ReverseMap();
+        CreateMap<CreateOpportunityDto, Opportunity>();
+        CreateMap<UpdateOpportunityDto, Opportunity>()
+            .ForAllMembers(opts => opts.Condition((src, dest, srcMember) => srcMember != null));
+
     }
 }

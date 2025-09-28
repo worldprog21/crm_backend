@@ -25,6 +25,7 @@ namespace backend.Controllers
         {
             var customers = await _context.Customers
             .Include(c => c.Contacts) // load contact
+            .Include(c => c.Opportunities) // load Opportunities
             .ToListAsync();
 
             return _mapper.Map<List<CustomerDto>>(customers);
@@ -35,6 +36,7 @@ namespace backend.Controllers
         {
             var customer = await _context.Customers
             .Include(c => c.Contacts) // load contact
+            .Include(c => c.Opportunities) // load Opportunities
             .FirstOrDefaultAsync(x => x.Id == id);
 
             if (customer == null)
