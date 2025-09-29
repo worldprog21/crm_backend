@@ -45,6 +45,23 @@ namespace backend.Controllers
                 query = query.Where(c => c.Type.ToLower().Contains(filterParams.Type.ToLower()));
             }
 
+            // sorting
+            if (!string.IsNullOrWhiteSpace(filterParams.Sort))
+            {
+                query = filterParams.Sort.ToLower() switch
+                {
+                    "name_asc" => query.OrderBy(c => c.Name),
+                    "name_desc" => query.OrderByDescending(c => c.Name),
+                    "industry_asc" => query.OrderBy(c => c.Industry),
+                    "industry_desc" => query.OrderByDescending(c => c.Industry),
+                    _ => query.OrderBy(c => c.Name) // default
+                };
+            }
+            else
+            {
+                query = query.OrderBy(c => c.Name); // default if no sort given
+            }
+
             // pagination
             var totalCount = await query.CountAsync();
 
