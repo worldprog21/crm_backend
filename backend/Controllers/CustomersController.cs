@@ -3,12 +3,14 @@ using backend.Data;
 using backend.DTOs;
 using backend.Entities;
 using backend.RequestHelpers;
+using Microsoft.AspNetCore.Authorization;
 using Microsoft.AspNetCore.Mvc;
 using Microsoft.EntityFrameworkCore;
 
 namespace backend.Controllers
 {
     [Route("api/customers")]
+    [Authorize]
     [ApiController]
     public class CustomersController : ControllerBase
     {

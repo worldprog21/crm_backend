@@ -2,6 +2,7 @@ using AutoMapper;
 using backend.Data;
 using backend.DTOs;
 using backend.Entities;
+using Microsoft.AspNetCore.Authorization;
 using Microsoft.AspNetCore.Http;
 using Microsoft.AspNetCore.Mvc;
 using Microsoft.EntityFrameworkCore;
@@ -10,6 +11,8 @@ namespace backend.Controllers
 {
     [Route("api/contacts")]
     [ApiController]
+    [Authorize]
+
     public class ContactsController : ControllerBase
     {
         private readonly CrmDBContext _context;

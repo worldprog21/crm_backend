@@ -2,12 +2,14 @@ using AutoMapper;
 using backend.Data;
 using backend.DTOs;
 using backend.Entities;
+using Microsoft.AspNetCore.Authorization;
 using Microsoft.AspNetCore.Mvc;
 using Microsoft.EntityFrameworkCore;
 
 namespace backend.Controllers
 {
     [Route("api/opportunities")]
+    [Authorize]
     [ApiController]
     public class OpportunitiesController : ControllerBase
     {
