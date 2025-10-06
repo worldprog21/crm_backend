@@ -11,7 +11,7 @@ namespace backend.Controllers
     [Route("api/activities")]
     [Authorize]
     [ApiController]
-    public class ActivitiesController : ControllerBase
+    public class ActivitiesController : BaseApiController
     {
         private readonly CrmDBContext _context;
         private readonly IMapper _mapper;
@@ -23,11 +23,22 @@ namespace backend.Controllers
         }
 
         [HttpGet]
-        public async Task<ActionResult<List<ActivityDto>>> GetAllActivities()
+        public async Task<ActionResult<List<ActivityDto>>> GetAllActivities([FromQuery] Guid? customerId)
         {
-            var activities = await _context.Activities
+            var userId = GetUserId();
+
+            var query = _context.Activities
+            .Where(c => c.UserId == userId)
             .Include(c => c.Customer)
-            .ToListAsync();
+            .AsQueryable();
+
+             // 🔹 Filter by CustomerId if provided
+            if (customerId.HasValue && customerId.Value != Guid.Empty)
+            {
+                query = query.Where(a => a.CustomerId == customerId.Value);
+            }
+
+            var activities = await query.ToListAsync();
 
             return _mapper.Map<List<ActivityDto>>(activities);
         }
@@ -35,9 +46,11 @@ namespace backend.Controllers
         [HttpGet("{id}")]
         public async Task<ActionResult<ActivityDto>> GetActivityById(Guid id)
         {
+            var userId = GetUserId();
+
             var activity = await _context.Activities
             .Include(c => c.Customer)
-            .FirstOrDefaultAsync(x => x.Id == id);
+            .FirstOrDefaultAsync(x => x.Id == id && x.UserId == userId);
 
             if (activity == null)
                 return NotFound(new { Message = "Activity not found" });
@@ -48,7 +61,10 @@ namespace backend.Controllers
         [HttpPost]
         public async Task<ActionResult<ActivityDto>> CreateActivity(CreateActivityDto activityDto)
         {
+            var userId = GetUserId();
+
             var activity = _mapper.Map<Activity>(activityDto);
+            activity.UserId = userId;
 
             _context.Activities.Add(activity);
 
@@ -63,7 +79,9 @@ namespace backend.Controllers
         [HttpPut("{id}")]
         public async Task<IActionResult> UpdateActivity(Guid id, UpdateActivityDto updateActivityDto)
         {
-            var activity = await _context.Activities.FirstOrDefaultAsync(x => x.Id == id);
+            var userId = GetUserId();
+            
+            var activity = await _context.Activities.FirstOrDefaultAsync(x => x.Id == id && x.UserId == userId);
             if (activity is null)
                 return NotFound(new { Message = "Activity not found" });
 
@@ -99,7 +117,9 @@ namespace backend.Controllers
         [HttpDelete("{id}")]
         public async Task<IActionResult> DeleteActivity(Guid id)
         {
-            var activity = await _context.Activities.FindAsync(id);
+            var userId = GetUserId();
+            
+            var activity = await _context.Activities.FirstOrDefaultAsync(x => x.Id == id&& x.UserId == userId);
             if (activity == null)
                 return NotFound(new { Message = "Activity not found" });
 

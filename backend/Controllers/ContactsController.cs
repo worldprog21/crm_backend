@@ -13,7 +13,7 @@ namespace backend.Controllers
     [ApiController]
     [Authorize]
 
-    public class ContactsController : ControllerBase
+    public class ContactsController : BaseApiController
     {
         private readonly CrmDBContext _context;
         private readonly IMapper _mapper;
@@ -25,11 +25,22 @@ namespace backend.Controllers
         }
 
         [HttpGet]
-        public async Task<ActionResult<List<ContactDto>>> GetAllContacts()
+        public async Task<ActionResult<List<ContactDto>>> GetAllContacts([FromQuery] Guid? customerId)
         {
-            var contacts = await _context.Contacts
+            var userId = GetUserId();
+
+            var query = _context.Contacts
+            .Where(c => c.UserId == userId)
             .Include(c => c.Customer)
-            .ToListAsync();
+            .AsQueryable();
+
+            // 🔹 Filter by CustomerId if provided
+            if (customerId.HasValue && customerId.Value != Guid.Empty)
+            {
+                query = query.Where(a => a.CustomerId == customerId.Value);
+            }
+
+            var contacts = await query.ToListAsync();
 
             return _mapper.Map<List<ContactDto>>(contacts);
         }
@@ -37,9 +48,11 @@ namespace backend.Controllers
         [HttpGet("{id}")]
         public async Task<ActionResult<ContactDto>> GetContactById(Guid id)
         {
+            var userId = GetUserId();
+
             var contact = await _context.Contacts
             .Include(c => c.Customer)
-            .FirstOrDefaultAsync(x => x.Id == id);
+            .FirstOrDefaultAsync(x => x.Id == id&& x.UserId == userId);
 
             if (contact == null)
                 return NotFound(new { Message = "Contact not found" });
@@ -50,7 +63,10 @@ namespace backend.Controllers
         [HttpPost]
         public async Task<ActionResult<ContactDto>> CreateContact(CreateContactDto ContactDto)
         {
+            var userId = GetUserId();
+
             var contact = _mapper.Map<Contact>(ContactDto);
+            contact.UserId = userId;
 
             _context.Contacts.Add(contact);
 
@@ -65,7 +81,9 @@ namespace backend.Controllers
         [HttpPut("{id}")]
         public async Task<IActionResult> UpdateContact(Guid id, UpdateContactDto updateContactDto)
         {
-            var contact = await _context.Contacts.FirstOrDefaultAsync(x => x.Id == id);
+            var userId = GetUserId();
+
+            var contact = await _context.Contacts.FirstOrDefaultAsync(x => x.Id == id && x.UserId == userId);
             if (contact is null)
                 return NotFound(new { Message = "Contact not found" });
 
@@ -102,7 +120,9 @@ namespace backend.Controllers
         [HttpDelete("{id}")]
         public async Task<IActionResult> DeleteContact(Guid id)
         {
-            var contact = await _context.Contacts.FindAsync(id);
+            var userId = GetUserId();
+
+            var contact = await _context.Contacts.FirstOrDefaultAsync(x => x.Id == id && x.UserId == userId);
             if (contact == null)
                 return NotFound(new { Message = "Contact not found" });
 

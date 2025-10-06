@@ -12,7 +12,7 @@ namespace backend.Controllers
     [Route("api/leads")]
     [Authorize]
     [ApiController]
-    public class LeadsController : ControllerBase
+    public class LeadsController : BaseApiController
     {
         private readonly CrmDBContext _context;
         private readonly IMapper _mapper;
@@ -26,7 +26,11 @@ namespace backend.Controllers
         [HttpGet]
         public async Task<ActionResult<List<LeadDto>>> GetAllLeads()
         {
-            var leads = await _context.Leads.ToListAsync();
+            var userId = GetUserId();
+
+            var leads = await _context.Leads
+            .Where(c => c.UserId == userId)
+            .ToListAsync();
 
             return _mapper.Map<List<LeadDto>>(leads);
         }
@@ -34,7 +38,9 @@ namespace backend.Controllers
         [HttpGet("{id}")]
         public async Task<ActionResult<LeadDto>> GetLeadById(Guid id)
         {
-            var lead = await _context.Leads.FirstOrDefaultAsync(x => x.Id == id);
+            var userId = GetUserId();
+
+            var lead = await _context.Leads.FirstOrDefaultAsync(x => x.Id == id && x.UserId == userId);
 
             if (lead == null)
                 return NotFound(new { Message = "Record not found" });
@@ -45,7 +51,10 @@ namespace backend.Controllers
         [HttpPost]
         public async Task<ActionResult<LeadDto>> CreateLead(CreateLeadDto leadDto)
         {
+            var userId = GetUserId();
+
             var lead = _mapper.Map<Lead>(leadDto);
+            lead.UserId = userId;
 
             _context.Leads.Add(lead);
 
@@ -60,7 +69,10 @@ namespace backend.Controllers
         [HttpPut("{id}")]
         public async Task<IActionResult> UpdateLead(Guid id, UpdateLeadDto updateLeadDto)
         {
-            var lead = await _context.Leads.FirstOrDefaultAsync(x => x.Id == id);
+            var userId = GetUserId();
+
+            var lead = await _context.Leads.FirstOrDefaultAsync(x => x.Id == id && x.UserId == userId);
+
 
             if (lead is null)
                 return NotFound(new { Message = "Lead not found" });
@@ -99,7 +111,9 @@ namespace backend.Controllers
         [HttpDelete("{id}")]
         public async Task<IActionResult> DeleteLead(Guid id)
         {
-            var lead = await _context.Leads.FindAsync(id);
+            var userId = GetUserId();
+
+            var lead = await _context.Leads.FirstOrDefaultAsync(x => x.Id == id && x.UserId == userId);
 
             if (lead == null)
                 return NotFound(new { Message = "Lead not found" });

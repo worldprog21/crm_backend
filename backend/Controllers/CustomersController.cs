@@ -12,7 +12,7 @@ namespace backend.Controllers
     [Route("api/customers")]
     [Authorize]
     [ApiController]
-    public class CustomersController : ControllerBase
+    public class CustomersController : BaseApiController
     {
         private readonly CrmDBContext _context;
         private readonly IMapper _mapper;
@@ -26,7 +26,10 @@ namespace backend.Controllers
         [HttpGet]
         public async Task<ActionResult<object>> GetAllCustomers([FromQuery] CustomerFilterParams filterParams)
         {
+            var userId = GetUserId();
+
             var query = _context.Customers
+            .Where(c => c.UserId == userId)
             .Include(c => c.Contacts) // load contact
             .Include(c => c.Opportunities) // load Opportunities
             .AsQueryable();
@@ -87,10 +90,12 @@ namespace backend.Controllers
         [HttpGet("{id}")]
         public async Task<ActionResult<CustomerDto>> GetCustomerById(Guid id)
         {
+            var userId = GetUserId();
+
             var customer = await _context.Customers
             .Include(c => c.Contacts) // load contact
             .Include(c => c.Opportunities) // load Opportunities
-            .FirstOrDefaultAsync(x => x.Id == id);
+            .FirstOrDefaultAsync(x => x.Id == id && x.UserId == userId);
 
             if (customer == null)
                 return NotFound(new { Message = "Customer not found" });
@@ -101,7 +106,10 @@ namespace backend.Controllers
         [HttpPost]
         public async Task<ActionResult<CustomerDto>> CreateCustomer(CreateCustomerDto CustomerDto)
         {
+            var userId = GetUserId();
+
             var customer = _mapper.Map<Customer>(CustomerDto);
+            customer.UserId = userId;
 
             _context.Customers.Add(customer);
 
@@ -116,7 +124,9 @@ namespace backend.Controllers
         [HttpPut("{id}")]
         public async Task<IActionResult> UpdateCustomer(Guid id, UpdateCustomerDto updateCustomerDto)
         {
-            var customer = await _context.Customers.FirstOrDefaultAsync(x => x.Id == id);
+            var userId = GetUserId();
+
+            var customer = await _context.Customers.FirstOrDefaultAsync(x => x.Id == id && x.UserId == userId);
             if (customer is null)
                 return NotFound(new { Message = "Customer not found" });
 
@@ -152,7 +162,9 @@ namespace backend.Controllers
         [HttpDelete("{id}")]
         public async Task<IActionResult> DeleteCustomer(Guid id)
         {
-            var customer = await _context.Customers.FindAsync(id);
+            var userId = GetUserId();
+
+            var customer = await _context.Customers.FirstOrDefaultAsync(x => x.Id == id && x.UserId == userId);
             if (customer == null)
                 return NotFound(new { Message = "Customer not found" });
 

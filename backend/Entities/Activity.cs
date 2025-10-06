@@ -13,7 +13,8 @@ public class Activity
     public DateTime DueDate { get; set; }
     public Guid CustomerId { get; set; }
     public Customer Customer { get; set; }
-
+    public Guid UserId { get; set; }
+    public User User { get; set; } = null!;
     public DateTime CreatedAt { get; set; } = DateTime.UtcNow;
     public DateTime UpdatedAt { get; set; } = DateTime.UtcNow;
 

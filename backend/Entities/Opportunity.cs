@@ -16,6 +16,8 @@ public class Opportunity
     public Guid CustomerId { get; set; }
     public Customer Customer { get; set; } = null!;
 
+public Guid UserId { get; set; }
+    public User User { get; set; } = null!;
     public DateTime CreatedAt { get; set; } = DateTime.UtcNow;
     public DateTime UpdatedAt { get; set; } = DateTime.UtcNow;
 }

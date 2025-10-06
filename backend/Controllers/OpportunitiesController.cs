@@ -11,7 +11,7 @@ namespace backend.Controllers
     [Route("api/opportunities")]
     [Authorize]
     [ApiController]
-    public class OpportunitiesController : ControllerBase
+    public class OpportunitiesController : BaseApiController
     {
         private readonly CrmDBContext _context;
         private readonly IMapper _mapper;
@@ -23,11 +23,22 @@ namespace backend.Controllers
         }
 
         [HttpGet]
-        public async Task<ActionResult<List<OpportunityDto>>> GetAllOpportunities()
+        public async Task<ActionResult<List<OpportunityDto>>> GetAllOpportunities([FromQuery] Guid? customerId)
         {
-            var opportunities = await _context.Opportunities
+            var userId = GetUserId();
+
+            var query =  _context.Opportunities
+                .Where(c => c.UserId == userId)
                 .Include(o => o.Customer)
-                .ToListAsync();
+                .AsQueryable();
+
+            // 🔹 Filter by CustomerId if provided
+            if (customerId.HasValue && customerId.Value != Guid.Empty)
+            {
+                query = query.Where(a => a.CustomerId == customerId.Value);
+            }
+
+            var opportunities = await query.ToListAsync();
 
             return Ok(_mapper.Map<List<OpportunityDto>>(opportunities));
         }
@@ -35,9 +46,11 @@ namespace backend.Controllers
         [HttpGet("{id}")]
         public async Task<ActionResult<OpportunityDto>> GetOpportunityById(Guid id)
         {
+            var userId = GetUserId();
+
             var opportunity = await _context.Opportunities
                 .Include(o => o.Customer)
-                .FirstOrDefaultAsync(x => x.Id == id);
+                .FirstOrDefaultAsync(x => x.Id == id && x.UserId == userId);
 
             if (opportunity == null)
                 return NotFound(new { Message = "Opportunity not found" });
@@ -48,7 +61,10 @@ namespace backend.Controllers
         [HttpPost]
         public async Task<ActionResult<OpportunityDto>> CreateOpportunity(CreateOpportunityDto dto)
         {
+            var userId = GetUserId();
+
             var opportunity = _mapper.Map<Opportunity>(dto);
+            opportunity.UserId = userId;
 
             _context.Opportunities.Add(opportunity);
 
@@ -62,7 +78,9 @@ namespace backend.Controllers
         [HttpPut("{id}")]
         public async Task<IActionResult> UpdateOpportunity(Guid id, UpdateOpportunityDto dto)
         {
-            var opportunity = await _context.Opportunities.FirstOrDefaultAsync(x => x.Id == id);
+            var userId = GetUserId();
+
+            var opportunity = await _context.Opportunities.FirstOrDefaultAsync(x => x.Id == id && x.UserId == userId);
             if (opportunity is null)
                 return NotFound(new { Message = "Opportunity not found" });
 
@@ -97,7 +115,9 @@ namespace backend.Controllers
         [HttpDelete("{id}")]
         public async Task<IActionResult> DeleteOpportunity(Guid id)
         {
-            var opportunity = await _context.Opportunities.FindAsync(id);
+            var userId = GetUserId();
+
+            var opportunity = await _context.Opportunities.FirstOrDefaultAsync(x => x.Id == id && x.UserId == userId);
             if (opportunity == null)
                 return NotFound(new { Message = "Opportunity not found" });
 
