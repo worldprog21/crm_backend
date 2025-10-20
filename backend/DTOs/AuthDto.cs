@@ -24,6 +24,7 @@ public class LoginDto
 
 public class AuthResponseDto
 {
+        public Guid Id { get; set; }
         public string Token { get; set; } = null!;
         public string Email { get; set; } = null!;
 }

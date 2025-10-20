@@ -2,6 +2,7 @@
 using System;
 using Microsoft.EntityFrameworkCore;
 using Microsoft.EntityFrameworkCore.Infrastructure;
+using Microsoft.EntityFrameworkCore.Migrations;
 using Microsoft.EntityFrameworkCore.Storage.ValueConversion;
 using Npgsql.EntityFrameworkCore.PostgreSQL.Metadata;
 using backend.Data;
@@ -11,9 +12,11 @@ using backend.Data;
 namespace backend.Data.Migrations
 {
     [DbContext(typeof(CrmDBContext))]
-    partial class CrmDBContextModelSnapshot : ModelSnapshot
+    [Migration("20251020124159_Update leads and customers")]
+    partial class Updateleadsandcustomers
     {
-        protected override void BuildModel(ModelBuilder modelBuilder)
+        /// <inheritdoc />
+        protected override void BuildTargetModel(ModelBuilder modelBuilder)
         {
 #pragma warning disable 612, 618
             modelBuilder

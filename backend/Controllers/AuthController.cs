@@ -44,7 +44,7 @@ namespace backend.Controllers
             await _context.SaveChangesAsync();
 
             var token = CreateToken(user);
-            return Ok(new AuthResponseDto { Email = user.Email, Token = token });
+            return Ok(new AuthResponseDto { Id = user.Id, Email = user.Email, Token = token });
         }
 
         // POST: api/auth/login
@@ -58,7 +58,7 @@ namespace backend.Controllers
                 return Unauthorized(new { Message = "Invalid email or password" });
 
             var token = CreateToken(user);
-            return Ok(new AuthResponseDto { Email = user.Email, Token = token });
+            return Ok(new AuthResponseDto { Id = user.Id, Email = user.Email, Token = token });
         }
 
         private void CreatePasswordHash(string password, out byte[] hash, out byte[] salt)
